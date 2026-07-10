@@ -4,7 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>fioarg — fio command builder</title>
-<meta name="description" content="Build fio benchmark commands by clicking through options.">
+<meta name="description" content="fioarg is a free online fio command builder. Assemble disk benchmark commands (random read/write, block size, queue depth, ioengine) by clicking through options, then copy and run.">
+<link rel="canonical" href="https://osjupiter.github.io/fioarg/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="fioarg">
+<meta property="og:title" content="fioarg — fio command builder">
+<meta property="og:description" content="Assemble fio disk benchmark commands by clicking through options, then copy and run.">
+<meta property="og:url" content="https://osjupiter.github.io/fioarg/">
+<meta property="og:image" content="https://osjupiter.github.io/fioarg/ogp.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "fioarg",
+  "url": "https://osjupiter.github.io/fioarg/",
+  "description": "Online builder for fio disk benchmark commands: pick I/O pattern, block size, queue depth and more, then copy the generated command.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
 <style>
   .checks { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
@@ -35,13 +55,13 @@
   .ticks span { cursor: pointer; }
   .ticks span:hover { color: var(--pico-primary); }
   .toplinks { position: absolute; top: 0.75rem; right: 1.25rem; white-space: nowrap; font-size: 0.85rem; }
-  #luckyBtn { width: auto; }
 </style>
 </head>
 <body>
 <main class="container">
   <nav class="toplinks">
-    <a href="https://fio.readthedocs.io/en/latest/fio_doc.html" target="_blank" rel="noopener">fio documentation</a>
+    <a href="#" id="luckyBtn">🎰 today's lucky fio</a>
+    · <a href="https://fio.readthedocs.io/en/latest/fio_doc.html" target="_blank" rel="noopener">fio documentation</a>
     · <a href="https://github.com/osjupiter/fioarg" target="_blank" rel="noopener">source</a>
   </nav>
   <hgroup>
@@ -152,12 +172,6 @@
     <legend><strong>Job name <code>--name</code></strong></legend>
     <p class="hint" style="margin-bottom:0.5rem">Auto-generated — anything you type here is appended as a suffix.</p>
     <input type="text" id="nameSuffix" placeholder="">
-  </fieldset>
-
-  <fieldset>
-    <legend><strong>Bonus</strong></legend>
-    <button id="luckyBtn" class="secondary" type="button">🎰 Today's Lucky fio</button>
-    <p class="hint" id="luckyMsg" style="margin:0.5rem 0 0"></p>
   </fieldset>
 
   <section class="cmds">
@@ -422,7 +436,8 @@
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
   }
-  $("luckyBtn").addEventListener("click", () => {
+  $("luckyBtn").addEventListener("click", e => {
+    e.preventDefault();
     const d = new Date();
     const rng = mulberry32(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate());
     const pick = arr => arr[Math.floor(rng() * arr.length)];
@@ -444,8 +459,6 @@
     $("groupRep").checked = rng() < 0.7;
     $("nameSuffix").value = "lucky";
 
-    $("luckyMsg").textContent =
-      `🍀 Your lucky I/O today: ${rw} @ ${state.bs}, QD${state.iodepth} × ${state.numjobs} jobs on ${$("ioengine").value}. Same fortune all day — come back tomorrow!`;
     render();
   });
 
