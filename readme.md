@@ -1,67 +1,18 @@
-# fioh
+# fioarg
 
-**fio** interactive **h**elper — a Go CLI that interactively builds a `fio` command from your selections and runs it.
+A static web page for building [fio](https://github.com/axboe/fio) benchmark commands by clicking through options.
 
-## Setup
+**→ https://osjupiter.github.io/fioarg/**
 
-```bash
-git clone <this> fioh && cd fioh
-go mod init fioh
-go mod tidy
-go build -o fioh .
-```
+## Features
 
-Install `fio` separately:
+- Covers the common options: `--rw`, `--bs`, `--size`, `--numjobs`, `--iodepth`, `--ioengine`, `--direct`, `--time_based` / `--runtime` / `--ramp_time`, `--filename` / `--directory`, `--rwmixread`, `--output-format`, `--group_reporting`, plus a free-form extras field
+- One-click presets (4k random read/write, sequential throughput, mixed 70/30, QD1 latency)
+- Live command preview with a copy button
+- No build step, no dependencies — a single `index.html`
 
-- Debian/Ubuntu: `sudo apt install fio`
-- RHEL/Fedora: `sudo dnf install fio`
-- macOS: `brew install fio`
+## Development
 
-## Usage
+Open `index.html` in a browser. That's it.
 
-```bash
-./fioh
-```
-
-Arrow keys to select, Enter to confirm, Tab/Shift+Tab to move between fields, Ctrl+C to abort.
-
-Prompts, in order:
-
-| Group | Options |
-|---|---|
-| Basics | `--name` / `--rw` / `--bs` |
-| Scale & engine | `--size` / `--numjobs` / `--iodepth` / `--ioengine` / `--direct` |
-| Time | `--time_based` / `--runtime` |
-| Target | `--filename` or `--directory` and its path |
-| Output / mixed | `--rwmixread` / `--output-format` / `--group_reporting` / extra options |
-
-Finally the assembled `fio ...` command is shown, and you can choose **Run / Print only / Cancel**.
-
-## Example
-
-Selections like:
-
-```
-name       = randread-test
-rw         = randread
-bs         = 4k
-size       = 1G
-numjobs    = 4
-iodepth    = 32
-ioengine   = libaio
-direct     = yes
-time_based = yes
-runtime    = 30
-target     = filename: /tmp/fio-testfile
-group_rep  = yes
-```
-
-produce:
-
-```
-fio --name=randread-test --rw=randread --bs=4k --size=1G --numjobs=4 \
-    --iodepth=32 --ioengine=libaio --direct=1 --time_based --runtime=30 \
-    --filename=/tmp/fio-testfile --output-format=normal --group_reporting
-```
-
-> **Warning:** Pointing `--filename` at a block device (e.g. `/dev/sdX`) with a write workload destroys its data.
+> **Warning:** Pointing `--filename` at a raw block device (e.g. `/dev/sdX`) with a write workload destroys its data.
