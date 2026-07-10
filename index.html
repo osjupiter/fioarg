@@ -128,6 +128,15 @@
         </select>
       </label>
       <label><input type="checkbox" id="direct" role="switch" checked> Direct I/O <code>--direct=1</code> (bypass page cache)</label>
+      <label for="durability">Durability
+        <select id="durability">
+          <option value="">off — no explicit sync</option>
+          <option value="end_fsync">end_fsync — fsync once at the end (--end_fsync=1)</option>
+          <option value="fsync">fsync — fsync after every write (--fsync=1)</option>
+          <option value="fdatasync">fdatasync — like fsync, skips metadata (--fdatasync=1)</option>
+          <option value="sync">O_SYNC — every write is synchronous (--sync=1)</option>
+        </select>
+      </label>
     </div>
   </fieldset>
 
@@ -185,6 +194,34 @@
     </label>
     <label><input type="checkbox" id="groupRep" role="switch" checked> Group reporting <code>--group_reporting</code></label>
   </fieldset>
+
+  <details>
+    <summary><strong>Advanced</strong></summary>
+    <fieldset>
+      <label><input type="checkbox" id="refillBuffers" role="switch"> Refill buffers <code>--refill_buffers</code> — random write data, keeps compressing drives honest</label>
+      <label><input type="checkbox" id="randrepeat0" role="switch"> Non-repeatable random <code>--randrepeat=0</code> — new random sequence every run</label>
+      <label><input type="checkbox" id="norandommap" role="switch"> No random map <code>--norandommap</code> — blocks may be hit more than once</label>
+      <div class="grid">
+        <label for="rateBw">Bandwidth limit <code>--rate</code>
+          <input type="text" id="rateBw" placeholder="e.g. 10M (empty = unlimited)">
+        </label>
+        <label for="rateIops">IOPS limit <code>--rate_iops</code>
+          <input type="text" id="rateIops" placeholder="e.g. 1000 (empty = unlimited)">
+        </label>
+      </div>
+      <div class="grid">
+        <label for="loops">Loops <code>--loops</code>
+          <input type="text" id="loops" placeholder="repeat count (for non time-based runs)">
+        </label>
+        <label for="nrfiles">Files per job <code>--nrfiles</code>
+          <input type="text" id="nrfiles" placeholder="e.g. 4 (with a directory target)">
+        </label>
+      </div>
+      <label for="offset">Start offset <code>--offset</code>
+        <input type="text" id="offset" placeholder="e.g. 10G or 20% (empty = start of target)">
+      </label>
+    </fieldset>
+  </details>
 
   <fieldset>
     <legend><strong>Job name <code>--name</code></strong></legend>
@@ -368,11 +405,23 @@
     const args = [`--name=${name}`, `--rw=${rw}`, `--bs=${state.bs}`, `--size=${state.size}`,
                   `--numjobs=${state.numjobs}`, `--iodepth=${state.iodepth}`,
                   `--ioengine=${$("ioengine").value}`, `--direct=${$("direct").checked ? 1 : 0}`];
+    const dur = { end_fsync: "--end_fsync=1", fsync: "--fsync=1",
+                  fdatasync: "--fdatasync=1", sync: "--sync=1" }[$("durability").value];
+    if (dur) args.push(dur);
     if ($("timeBased").checked) args.push("--time_based", `--runtime=${state.runtime}`);
     if (state.rampTime > 0) args.push(`--ramp_time=${state.rampTime}`);
     if (target) args.push(`--${radio("targetKind")}=${target}`);
     if (isMixed(rw)) args.push(`--rwmixread=${state.rwmixread}`);
     if ($("verify").value) args.push(`--verify=${$("verify").value}`);
+    if ($("refillBuffers").checked) args.push("--refill_buffers");
+    if ($("randrepeat0").checked) args.push("--randrepeat=0");
+    if ($("norandommap").checked) args.push("--norandommap");
+    const opt = (flag, id) => { const v = $(id).value.trim(); if (v) args.push(`--${flag}=${v}`); };
+    opt("rate", "rateBw");
+    opt("rate_iops", "rateIops");
+    opt("loops", "loops");
+    opt("nrfiles", "nrfiles");
+    opt("offset", "offset");
     args.push(`--output-format=${$("outputFmt").value}`);
     if ($("groupRep").checked) args.push("--group_reporting");
     if (extra) args.push(extra);
@@ -391,11 +440,20 @@
         ioengine: $("ioengine").value,
         direct: $("direct").checked,
         timeBased: $("timeBased").checked,
+        durability: $("durability").value,
         verify: $("verify").value,
         outputFmt: $("outputFmt").value,
         extra: $("extra").value,
         groupRep: $("groupRep").checked,
         nameSuffix: $("nameSuffix").value,
+        refillBuffers: $("refillBuffers").checked,
+        randrepeat0: $("randrepeat0").checked,
+        norandommap: $("norandommap").checked,
+        rateBw: $("rateBw").value,
+        rateIops: $("rateIops").value,
+        loops: $("loops").value,
+        nrfiles: $("nrfiles").value,
+        offset: $("offset").value,
       }));
     } catch { /* storage unavailable (private mode etc.) */ }
   }
@@ -414,11 +472,18 @@
       if (s.ioengine) $("ioengine").value = s.ioengine;
       if (s.direct !== undefined) $("direct").checked = s.direct;
       if (s.timeBased !== undefined) $("timeBased").checked = s.timeBased;
+      if (s.durability !== undefined) $("durability").value = s.durability;
       if (s.verify !== undefined) $("verify").value = s.verify;
       if (s.outputFmt) $("outputFmt").value = s.outputFmt;
       if (s.extra !== undefined) $("extra").value = s.extra;
       if (s.groupRep !== undefined) $("groupRep").checked = s.groupRep;
       if (s.nameSuffix !== undefined) $("nameSuffix").value = s.nameSuffix;
+      ["refillBuffers", "randrepeat0", "norandommap"].forEach(id => {
+        if (s[id] !== undefined) $(id).checked = s[id];
+      });
+      ["rateBw", "rateIops", "loops", "nrfiles", "offset"].forEach(id => {
+        if (s[id] !== undefined) $(id).value = s[id];
+      });
     } catch { /* corrupt state — ignore and use defaults */ }
   }
 
