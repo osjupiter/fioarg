@@ -31,6 +31,8 @@
 </script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
 <style>
+  /* code chips must never change a line's height: no vertical padding, inherit line-height */
+  main code { padding-top: 0; padding-bottom: 0; line-height: inherit; vertical-align: baseline; }
   .checks { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
   .checks label { display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 0; white-space: nowrap; }
   .checks input { margin: 0; }
