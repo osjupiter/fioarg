@@ -163,15 +163,26 @@
   <fieldset>
     <legend><strong>Output &amp; extras</strong></legend>
     <div class="grid">
+      <label for="verify">Data verification <code>--verify</code>
+        <select id="verify">
+          <option value="">off</option>
+          <option value="crc32c">crc32c — fast, the usual choice</option>
+          <option value="xxhash">xxhash — fastest</option>
+          <option value="md5">md5</option>
+          <option value="sha1">sha1</option>
+          <option value="sha256">sha256</option>
+        </select>
+      </label>
       <label for="outputFmt">Output format <code>--output-format</code>
         <select id="outputFmt">
           <option>normal</option><option>json</option><option>terse</option>
         </select>
       </label>
-      <label for="extra">Extra options
-        <input type="text" id="extra" placeholder="--thread --numa_cpu_nodes=0">
-      </label>
     </div>
+    <div class="hint" style="margin:-0.5rem 0 0.75rem">Verification checksums written data and reads it back — use with a write workload.</div>
+    <label for="extra">Extra options
+      <input type="text" id="extra" placeholder="--thread --numa_cpu_nodes=0">
+    </label>
     <label><input type="checkbox" id="groupRep" role="switch" checked> Group reporting <code>--group_reporting</code></label>
   </fieldset>
 
@@ -361,6 +372,7 @@
     if (state.rampTime > 0) args.push(`--ramp_time=${state.rampTime}`);
     if (target) args.push(`--${radio("targetKind")}=${target}`);
     if (isMixed(rw)) args.push(`--rwmixread=${state.rwmixread}`);
+    if ($("verify").value) args.push(`--verify=${$("verify").value}`);
     args.push(`--output-format=${$("outputFmt").value}`);
     if ($("groupRep").checked) args.push("--group_reporting");
     if (extra) args.push(extra);
@@ -379,6 +391,7 @@
         ioengine: $("ioengine").value,
         direct: $("direct").checked,
         timeBased: $("timeBased").checked,
+        verify: $("verify").value,
         outputFmt: $("outputFmt").value,
         extra: $("extra").value,
         groupRep: $("groupRep").checked,
@@ -401,6 +414,7 @@
       if (s.ioengine) $("ioengine").value = s.ioengine;
       if (s.direct !== undefined) $("direct").checked = s.direct;
       if (s.timeBased !== undefined) $("timeBased").checked = s.timeBased;
+      if (s.verify !== undefined) $("verify").value = s.verify;
       if (s.outputFmt) $("outputFmt").value = s.outputFmt;
       if (s.extra !== undefined) $("extra").value = s.extra;
       if (s.groupRep !== undefined) $("groupRep").checked = s.groupRep;
