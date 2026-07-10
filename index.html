@@ -29,6 +29,9 @@
   fieldset { margin-bottom: 1.25rem; }
   h1 span { color: var(--pico-primary); }
   .hint { color: var(--pico-muted-color); font-size: 0.8rem; }
+  .ticks { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--pico-muted-color); margin-top: -0.5rem; padding: 0 2px; }
+  .ticks span { cursor: pointer; }
+  .ticks span:hover { color: var(--pico-primary); }
   .topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
   .topbar nav { white-space: nowrap; font-size: 0.85rem; margin-top: 0.4rem; }
   #luckyBtn { width: auto; }
@@ -308,6 +311,19 @@
   }
 
   Object.keys(SCALES).forEach(initScrub);
+
+  // tick labels under the block-size slider; click a tick to jump to it
+  {
+    const ticks = document.createElement("div");
+    ticks.className = "ticks";
+    SCALES.bs.forEach(v => {
+      const s = document.createElement("span");
+      s.textContent = v;
+      s.addEventListener("click", () => { setField("bs", v); render(); });
+      ticks.appendChild(s);
+    });
+    $("bs").after(ticks);
+  }
 
   const isMixed = rw => rw === "randrw" || rw === "readwrite";
   const radio = name => document.querySelector(`input[name="${name}"]:checked`).value;
