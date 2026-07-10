@@ -34,23 +34,20 @@
   .ticks { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--pico-muted-color); margin-top: -0.5rem; padding: 0 2px; }
   .ticks span { cursor: pointer; }
   .ticks span:hover { color: var(--pico-primary); }
-  .topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
-  .topbar nav { white-space: nowrap; font-size: 0.85rem; margin-top: 0.4rem; }
+  .toplinks { position: absolute; top: 0.75rem; right: 1.25rem; white-space: nowrap; font-size: 0.85rem; }
   #luckyBtn { width: auto; }
 </style>
 </head>
 <body>
 <main class="container">
-  <div class="topbar">
-    <hgroup>
-      <h1><span>fio</span>arg</h1>
-      <p>Let's build your <code>fio</code> arguments.</p>
-    </hgroup>
-    <nav>
-      <a href="https://fio.readthedocs.io/en/latest/fio_doc.html" target="_blank" rel="noopener">fio documentation</a>
-      · <a href="https://github.com/osjupiter/fioarg" target="_blank" rel="noopener">source</a>
-    </nav>
-  </div>
+  <nav class="toplinks">
+    <a href="https://fio.readthedocs.io/en/latest/fio_doc.html" target="_blank" rel="noopener">fio documentation</a>
+    · <a href="https://github.com/osjupiter/fioarg" target="_blank" rel="noopener">source</a>
+  </nav>
+  <hgroup>
+    <h1><span>fio</span>arg</h1>
+    <p>Let's build your <code>fio</code> arguments.</p>
+  </hgroup>
 
   <fieldset>
     <legend><strong>I/O pattern <code>--rw</code></strong></legend>
@@ -153,11 +150,8 @@
 
   <fieldset>
     <legend><strong>Job name <code>--name</code></strong></legend>
-    <p class="hint" style="margin-bottom:0.5rem">
-      Auto-generated as <em>pattern-size-qdN</em> (e.g. <code id="namePreview"></code>).
-      Anything you type here is appended as a suffix.
-    </p>
-    <input type="text" id="nameSuffix" placeholder="optional suffix, e.g. nvme0 → randread-1G-qd32-nvme0">
+    <p class="hint" style="margin-bottom:0.5rem">Auto-generated — anything you type here is appended as a suffix.</p>
+    <input type="text" id="nameSuffix" placeholder="">
   </fieldset>
 
   <fieldset>
@@ -397,7 +391,7 @@
     const rw = radio("rw");
     $("rwmixRow").hidden = !isMixed(rw);
     $("runtime").disabled = !$("timeBased").checked;
-    $("namePreview").textContent = autoName();
+    $("nameSuffix").placeholder = autoName();
 
     const writes = rw !== "read" && rw !== "randread";
     $("devWarn").classList.toggle("show", writes && /^\/dev\//.test($("target").value.trim()));
