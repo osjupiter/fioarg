@@ -66,8 +66,7 @@
 <body>
 <main class="container">
   <nav class="toplinks">
-    <a href="#" id="luckyBtn">🎰 today's lucky fio</a>
-    · <a href="https://fio.readthedocs.io/en/latest/fio_doc.html" target="_blank" rel="noopener">fio documentation</a>
+    <a href="https://fio.readthedocs.io/en/latest/fio_doc.html" target="_blank" rel="noopener">fio documentation</a>
     · <a href="https://github.com/osjupiter/fioarg" target="_blank" rel="noopener">source</a>
   </nav>
   <hgroup>
@@ -343,7 +342,7 @@
   const radio = name => document.querySelector(`input[name="${name}"]:checked`).value;
 
   function autoName() {
-    return `${radio("rw")}-${state.size}-qd${state.iodepth}`;
+    return `${radio("rw")}-${state.size}-QD${state.iodepth}`;
   }
 
   function build() {
@@ -431,41 +430,6 @@
       $("target").value = el.value === "directory" ? "/tmp/fio-testdir" : "/tmp/fio-testfile";
       render();
     });
-  });
-
-  // Today's Lucky fio — seeded by the date, so it's the same fortune all day
-  function mulberry32(a) {
-    return function () {
-      a |= 0; a = (a + 0x6D2B79F5) | 0;
-      let t = Math.imul(a ^ (a >>> 15), 1 | a);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-  $("luckyBtn").addEventListener("click", e => {
-    e.preventDefault();
-    const d = new Date();
-    const rng = mulberry32(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate());
-    const pick = arr => arr[Math.floor(rng() * arr.length)];
-
-    const rw = pick(["read", "write", "randread", "randwrite", "randrw", "readwrite"]);
-    document.querySelector(`input[name="rw"][value="${rw}"]`).checked = true;
-
-    setField("bs", pick(SCALES.bs));
-    setField("iodepth", pick(SCALES.iodepth));
-    setField("numjobs", pick(SCALES.numjobs));
-    setField("size", pick(SCALES.size));
-    setField("runtime", pick(SCALES.runtime));
-    setField("rampTime", pick([0, 0, 0, 5, 10]));
-    setField("rwmixread", pick(SCALES.rwmixread));
-    $("ioengine").value = pick([...$("ioengine").options].map(o => o.value));
-    $("direct").checked = rng() < 0.8;
-    $("timeBased").checked = true;
-    $("outputFmt").value = pick(["normal", "normal", "json", "terse"]);
-    $("groupRep").checked = rng() < 0.7;
-    $("nameSuffix").value = "lucky";
-
-    render();
   });
 
   $("copyBtn").addEventListener("click", async () => {
