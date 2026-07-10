@@ -5,200 +5,76 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>fioarg — fio command builder</title>
 <meta name="description" content="Build fio benchmark commands by clicking through options.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
 <style>
-  :root {
-    --bg: #f6f7f9;
-    --panel: #ffffff;
-    --border: #d9dde3;
-    --text: #1c2128;
-    --muted: #6a737d;
-    --accent: #2563eb;
-    --accent-soft: #dbeafe;
-    --warn: #b45309;
-    --warn-bg: #fef3c7;
-    --code-bg: #0f172a;
-    --code-text: #e2e8f0;
-    --radius: 10px;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0d1117;
-      --panel: #161b22;
-      --border: #30363d;
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --accent: #4f8ef7;
-      --accent-soft: #1e3a5f;
-      --warn: #fbbf24;
-      --warn-bg: #3b2f0e;
-      --code-bg: #010409;
-      --code-text: #e6edf3;
-    }
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.5;
-  }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 24px 16px 96px; }
-  header { margin-bottom: 20px; }
-  header h1 { margin: 0; font-size: 1.6rem; }
-  header h1 span { color: var(--accent); }
-  header p { margin: 4px 0 0; color: var(--muted); font-size: 0.95rem; }
-
-  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-  .presets button {
-    border: 1px solid var(--border);
-    background: var(--panel);
-    color: var(--text);
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    cursor: pointer;
-  }
-  .presets button:hover { border-color: var(--accent); color: var(--accent); }
-
-  fieldset {
-    border: 1px solid var(--border);
-    background: var(--panel);
-    border-radius: var(--radius);
-    padding: 16px;
-    margin: 0 0 16px;
-  }
-  legend { font-weight: 600; padding: 0 6px; font-size: 0.95rem; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
-  label.field { display: block; font-size: 0.85rem; }
-  label.field .lbl { display: block; font-weight: 500; margin-bottom: 4px; }
-  label.field .lbl code { color: var(--muted); font-weight: 400; }
-  input[type="text"], select {
-    width: 100%;
-    padding: 7px 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 0.9rem;
-    font-family: inherit;
-  }
-  input[type="text"]:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
-  .hint { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
-
-  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-  .seg button {
-    border: none; background: var(--bg); color: var(--muted);
-    padding: 7px 14px; font-size: 0.85rem; cursor: pointer;
-  }
-  .seg button + button { border-left: 1px solid var(--border); }
-  .seg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-
-  .toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem; user-select: none; }
-  .toggle input { accent-color: var(--accent); width: 16px; height: 16px; }
-
-  .warn {
-    display: none;
-    background: var(--warn-bg); color: var(--warn);
-    border-radius: 6px; padding: 8px 10px; font-size: 0.8rem; margin-top: 8px;
-  }
-  .warn.show { display: block; }
-
-  .output {
-    position: sticky; bottom: 0;
-    margin-top: 24px;
-    background: var(--code-bg);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    box-shadow: 0 -4px 16px rgba(0,0,0,0.15);
-  }
-  .output .bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .output .bar span { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; }
-  .output pre {
-    margin: 0; white-space: pre-wrap; word-break: break-all;
-    color: var(--code-text);
-    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
-    font-size: 0.88rem;
-  }
-  #copyBtn {
-    background: var(--accent); color: #fff; border: none;
-    padding: 6px 16px; border-radius: 6px; font-size: 0.85rem; cursor: pointer;
-  }
-  #copyBtn:hover { filter: brightness(1.1); }
-
-  footer { margin-top: 20px; color: var(--muted); font-size: 0.8rem; }
-  footer a { color: var(--accent); }
+  .checks { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
+  .checks label { display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 0; white-space: nowrap; }
+  .checks input[type="checkbox"] { margin: 0; }
+  .slider-row label { display: flex; justify-content: space-between; margin-bottom: 0.25rem; }
+  .slider-row output { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .cmds { position: sticky; bottom: 0; background: var(--pico-background-color); padding: 0.75rem 0 1rem; border-top: 1px solid var(--pico-muted-border-color); }
+  .cmds pre { max-height: 30vh; overflow-y: auto; margin-bottom: 0.5rem; }
+  .cmds .bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; }
+  .cmds .bar small { text-transform: uppercase; letter-spacing: 0.08em; color: var(--pico-muted-color); }
+  .cmds button { width: auto; margin: 0; padding: 0.25rem 1rem; font-size: 0.85rem; }
+  #devWarn { display: none; }
+  #devWarn.show { display: block; }
+  fieldset { margin-bottom: 1.25rem; }
+  h1 span { color: var(--pico-primary); }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
+<main class="container">
+  <hgroup>
     <h1><span>fio</span>arg</h1>
-    <p>Click through the options to build a <code>fio</code> benchmark command.</p>
-  </header>
-
-  <div class="presets" id="presets">
-    <button data-preset="randread4k">4k random read</button>
-    <button data-preset="randwrite4k">4k random write</button>
-    <button data-preset="seqread">Sequential read throughput</button>
-    <button data-preset="seqwrite">Sequential write throughput</button>
-    <button data-preset="mixed">Mixed 70/30</button>
-    <button data-preset="latency">Latency (QD1)</button>
-  </div>
+    <p>Tick the options like a survey — get ready-to-run <code>fio</code> commands. Multiple patterns × block sizes generate one command per combination.</p>
+  </hgroup>
 
   <fieldset>
-    <legend>Basics</legend>
-    <div class="grid">
-      <label class="field">
-        <span class="lbl">Job name <code>--name</code></span>
-        <input type="text" id="name" value="benchtest">
-      </label>
-      <label class="field">
-        <span class="lbl">I/O pattern <code>--rw</code></span>
-        <select id="rw">
-          <option value="randread">randread — random read</option>
-          <option value="randwrite">randwrite — random write</option>
-          <option value="read">read — sequential read</option>
-          <option value="write">write — sequential write</option>
-          <option value="randrw">randrw — mixed random R/W</option>
-          <option value="readwrite">readwrite — mixed sequential R/W</option>
-        </select>
-      </label>
-      <label class="field">
-        <span class="lbl">Block size <code>--bs</code></span>
-        <select id="bs">
-          <option>4k</option><option>8k</option><option>16k</option>
-          <option>32k</option><option>64k</option><option>128k</option>
-          <option>256k</option><option>512k</option><option>1M</option>
-        </select>
-      </label>
-      <label class="field" id="rwmixField" style="display:none">
-        <span class="lbl">Read ratio % <code>--rwmixread</code></span>
-        <input type="text" id="rwmixread" value="70">
-        <div class="hint">Applied only for mixed workloads</div>
-      </label>
+    <legend><strong>I/O pattern <code>--rw</code></strong></legend>
+    <div class="checks" id="rwChecks">
+      <label><input type="checkbox" name="rw" value="read"> read</label>
+      <label><input type="checkbox" name="rw" value="write"> write</label>
+      <label><input type="checkbox" name="rw" value="randread" checked> randread</label>
+      <label><input type="checkbox" name="rw" value="randwrite"> randwrite</label>
+      <label><input type="checkbox" name="rw" value="randrw"> randrw</label>
+      <label><input type="checkbox" name="rw" value="readwrite"> readwrite</label>
     </div>
   </fieldset>
 
   <fieldset>
-    <legend>Scale &amp; engine</legend>
+    <legend><strong>Block size <code>--bs</code></strong></legend>
+    <div class="checks" id="bsChecks">
+      <label><input type="checkbox" name="bs" value="4k" checked> 4k</label>
+      <label><input type="checkbox" name="bs" value="8k"> 8k</label>
+      <label><input type="checkbox" name="bs" value="16k"> 16k</label>
+      <label><input type="checkbox" name="bs" value="32k"> 32k</label>
+      <label><input type="checkbox" name="bs" value="64k"> 64k</label>
+      <label><input type="checkbox" name="bs" value="128k"> 128k</label>
+      <label><input type="checkbox" name="bs" value="256k"> 256k</label>
+      <label><input type="checkbox" name="bs" value="512k"> 512k</label>
+      <label><input type="checkbox" name="bs" value="1M"> 1M</label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><strong>Scale &amp; engine</strong></legend>
     <div class="grid">
-      <label class="field">
-        <span class="lbl">Size <code>--size</code></span>
-        <input type="text" id="size" value="1G">
-        <div class="hint">e.g. 1G, 512M, 100M</div>
-      </label>
-      <label class="field">
-        <span class="lbl">Parallel jobs <code>--numjobs</code></span>
-        <input type="text" id="numjobs" value="1">
-      </label>
-      <label class="field">
-        <span class="lbl">I/O depth <code>--iodepth</code></span>
-        <input type="text" id="iodepth" value="32">
-        <div class="hint">Only meaningful with async engines</div>
-      </label>
-      <label class="field">
-        <span class="lbl">I/O engine <code>--ioengine</code></span>
+      <div class="slider-row">
+        <label for="iodepth">Queue depth <code>--iodepth</code> <output id="iodepthOut">32</output></label>
+        <input type="range" id="iodepth" min="0" max="8" step="1" value="5">
+      </div>
+      <div class="slider-row">
+        <label for="numjobs">Parallel jobs <code>--numjobs</code> <output id="numjobsOut">1</output></label>
+        <input type="range" id="numjobs" min="1" max="16" step="1" value="1">
+      </div>
+    </div>
+    <div class="grid">
+      <div class="slider-row">
+        <label for="size">Size <code>--size</code> <output id="sizeOut">1G</output></label>
+        <input type="range" id="size" min="0" max="7" step="1" value="3">
+      </div>
+      <label for="ioengine">I/O engine <code>--ioengine</code>
         <select id="ioengine">
           <option value="libaio">libaio — Linux async (default choice)</option>
           <option value="io_uring">io_uring — newer Linux</option>
@@ -210,142 +86,164 @@
         </select>
       </label>
     </div>
-    <div style="margin-top:12px">
-      <label class="toggle"><input type="checkbox" id="direct" checked> Direct I/O <code>--direct=1</code> (bypass page cache)</label>
+    <label><input type="checkbox" id="direct" role="switch" checked> Direct I/O <code>--direct=1</code> (bypass page cache)</label>
+    <div class="slider-row" id="rwmixRow" hidden>
+      <label for="rwmixread">Read ratio for mixed workloads <code>--rwmixread</code> <output id="rwmixreadOut">70%</output></label>
+      <input type="range" id="rwmixread" min="0" max="100" step="5" value="70">
     </div>
   </fieldset>
 
   <fieldset>
-    <legend>Time</legend>
+    <legend><strong>Time</strong></legend>
+    <label><input type="checkbox" id="timeBased" role="switch" checked> Time based <code>--time_based</code> — run until runtime even after size is exhausted</label>
     <div class="grid">
-      <div>
-        <label class="toggle"><input type="checkbox" id="timeBased" checked> Time based <code>--time_based</code></label>
-        <div class="hint">Keeps running until runtime even after size is exhausted</div>
+      <div class="slider-row">
+        <label for="runtime">Runtime <code>--runtime</code> <output id="runtimeOut">30s</output></label>
+        <input type="range" id="runtime" min="10" max="600" step="10" value="30">
       </div>
-      <label class="field">
-        <span class="lbl">Runtime (seconds) <code>--runtime</code></span>
-        <input type="text" id="runtime" value="30">
-      </label>
-      <label class="field">
-        <span class="lbl">Ramp time (seconds) <code>--ramp_time</code></span>
-        <input type="text" id="rampTime" value="">
-        <div class="hint">Warm-up excluded from results (optional)</div>
-      </label>
+      <div class="slider-row">
+        <label for="rampTime">Ramp time <code>--ramp_time</code> <output id="rampTimeOut">off</output></label>
+        <input type="range" id="rampTime" min="0" max="60" step="5" value="0">
+      </div>
     </div>
   </fieldset>
 
   <fieldset>
-    <legend>Target</legend>
+    <legend><strong>Target</strong></legend>
     <div class="grid">
-      <div class="field">
-        <span class="lbl" style="display:block;font-weight:500;margin-bottom:4px">Target type</span>
-        <div class="seg" id="targetKind">
-          <button type="button" data-v="filename" class="on">filename</button>
-          <button type="button" data-v="directory">directory</button>
-        </div>
-      </div>
-      <label class="field">
-        <span class="lbl">Path</span>
+      <fieldset>
+        <label><input type="radio" name="targetKind" value="filename" checked> filename (single file / device)</label>
+        <label><input type="radio" name="targetKind" value="directory"> directory (create files inside)</label>
+      </fieldset>
+      <label for="target">Path
         <input type="text" id="target" value="/tmp/fio-testfile">
       </label>
     </div>
-    <div class="warn" id="devWarn">⚠ Writing to a raw block device destroys its data. Make sure this device holds nothing you need.</div>
+    <p id="devWarn"><mark>⚠ Writing to a raw block device destroys its data. Make sure this device holds nothing you need.</mark></p>
   </fieldset>
 
   <fieldset>
-    <legend>Output &amp; extras</legend>
+    <legend><strong>Output &amp; extras</strong></legend>
     <div class="grid">
-      <label class="field">
-        <span class="lbl">Output format <code>--output-format</code></span>
+      <label for="outputFmt">Output format <code>--output-format</code>
         <select id="outputFmt">
           <option>normal</option><option>json</option><option>terse</option>
         </select>
       </label>
-      <label class="field">
-        <span class="lbl">Extra options</span>
-        <input type="text" id="extra" value="" placeholder="--thread --numa_cpu_nodes=0">
-        <div class="hint">Appended as-is</div>
+      <label for="extra">Extra options
+        <input type="text" id="extra" placeholder="--thread --numa_cpu_nodes=0">
       </label>
     </div>
-    <div style="margin-top:12px">
-      <label class="toggle"><input type="checkbox" id="groupRep" checked> Group reporting <code>--group_reporting</code></label>
-    </div>
+    <label><input type="checkbox" id="groupRep" role="switch" checked> Group reporting <code>--group_reporting</code></label>
   </fieldset>
 
-  <div class="output">
+  <fieldset>
+    <legend><strong>Job name <code>--name</code></strong></legend>
+    <input type="text" id="jobName" placeholder="auto-generated from the combination, e.g. randread-4k-qd32">
+  </fieldset>
+
+  <section class="cmds">
     <div class="bar">
-      <span>Command</span>
+      <small id="cmdCount">Command</small>
       <button id="copyBtn">Copy</button>
     </div>
-    <pre id="cmd"></pre>
-  </div>
+    <pre><code id="cmd"></code></pre>
+  </section>
 
   <footer>
-    <a href="https://fio.readthedocs.io/en/latest/fio_doc.html" target="_blank" rel="noopener">fio documentation</a>
-    · <a href="https://github.com/osjupiter/fioarg" target="_blank" rel="noopener">source</a>
+    <small>
+      <a href="https://fio.readthedocs.io/en/latest/fio_doc.html" target="_blank" rel="noopener">fio documentation</a>
+      · <a href="https://github.com/osjupiter/fioarg" target="_blank" rel="noopener">source</a>
+    </small>
   </footer>
-</div>
+</main>
 
 <script>
 (function () {
   const $ = id => document.getElementById(id);
-  const fields = ["name","rw","bs","rwmixread","size","numjobs","iodepth","ioengine",
-                  "runtime","rampTime","target","outputFmt","extra"];
-  const checks = ["direct","timeBased","groupRep"];
-  let targetKind = "filename";
+  const QD = [1, 2, 4, 8, 16, 32, 64, 128, 256];
+  const SIZES = ["100M", "256M", "512M", "1G", "2G", "4G", "8G", "16G"];
 
-  function isMixed(rw) { return rw === "randrw" || rw === "readwrite" || rw === "rw"; }
+  const checked = name =>
+    [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(el => el.value);
+  const isMixed = rw => rw === "randrw" || rw === "readwrite";
 
-  function build() {
-    const v = id => $(id).value.trim();
-    const args = [];
-    const kv = (k, val) => { if (val !== "") args.push(`--${k}=${val}`); };
+  function values() {
+    return {
+      rws: checked("rw"),
+      bss: checked("bs"),
+      iodepth: QD[+$("iodepth").value],
+      numjobs: +$("numjobs").value,
+      size: SIZES[+$("size").value],
+      ioengine: $("ioengine").value,
+      direct: $("direct").checked,
+      rwmixread: +$("rwmixread").value,
+      timeBased: $("timeBased").checked,
+      runtime: +$("runtime").value,
+      rampTime: +$("rampTime").value,
+      targetKind: document.querySelector('input[name="targetKind"]:checked').value,
+      target: $("target").value.trim(),
+      outputFmt: $("outputFmt").value,
+      extra: $("extra").value.trim(),
+      groupRep: $("groupRep").checked,
+      jobName: $("jobName").value.trim(),
+    };
+  }
 
-    kv("name", v("name"));
-    kv("rw", v("rw"));
-    kv("bs", v("bs"));
-    kv("size", v("size"));
-    kv("numjobs", v("numjobs"));
-    kv("iodepth", v("iodepth"));
-    kv("ioengine", v("ioengine"));
-    args.push(`--direct=${$("direct").checked ? 1 : 0}`);
+  function buildOne(v, rw, bs, multi) {
+    let name = v.jobName || `${rw}-${bs}-qd${v.iodepth}`;
+    if (v.jobName && multi) name = `${v.jobName}-${rw}-${bs}`;
 
-    if ($("timeBased").checked) {
-      args.push("--time_based");
-      kv("runtime", v("runtime"));
-    }
-    kv("ramp_time", v("rampTime"));
-    kv(targetKind, v("target"));
-    if (isMixed(v("rw"))) kv("rwmixread", v("rwmixread"));
-    kv("output-format", v("outputFmt"));
-    if ($("groupRep").checked) args.push("--group_reporting");
-    if (v("extra")) args.push(v("extra"));
-
+    const args = [`--name=${name}`, `--rw=${rw}`, `--bs=${bs}`, `--size=${v.size}`,
+                  `--numjobs=${v.numjobs}`, `--iodepth=${v.iodepth}`,
+                  `--ioengine=${v.ioengine}`, `--direct=${v.direct ? 1 : 0}`];
+    if (v.timeBased) args.push("--time_based", `--runtime=${v.runtime}`);
+    if (v.rampTime > 0) args.push(`--ramp_time=${v.rampTime}`);
+    if (v.target) args.push(`--${v.targetKind}=${v.target}`);
+    if (isMixed(rw)) args.push(`--rwmixread=${v.rwmixread}`);
+    args.push(`--output-format=${v.outputFmt}`);
+    if (v.groupRep) args.push("--group_reporting");
+    if (v.extra) args.push(v.extra);
     return "fio " + args.join(" ");
   }
 
   function render() {
-    const rw = $("rw").value;
-    $("rwmixField").style.display = isMixed(rw) ? "" : "none";
-    $("runtime").disabled = !$("timeBased").checked;
-    const t = $("target").value;
-    const writes = rw !== "read" && rw !== "randread";
-    $("devWarn").classList.toggle("show", writes && /^\/dev\//.test(t.trim()));
-    $("cmd").textContent = build();
+    const v = values();
+
+    // sync slider value labels
+    $("iodepthOut").textContent = v.iodepth;
+    $("numjobsOut").textContent = v.numjobs;
+    $("sizeOut").textContent = v.size;
+    $("rwmixreadOut").textContent = v.rwmixread + "%";
+    $("runtimeOut").textContent = v.runtime + "s";
+    $("rampTimeOut").textContent = v.rampTime > 0 ? v.rampTime + "s" : "off";
+    $("runtime").disabled = !v.timeBased;
+
+    $("rwmixRow").hidden = !v.rws.some(isMixed);
+
+    const writes = v.rws.some(rw => rw !== "read" && rw !== "randread");
+    $("devWarn").classList.toggle("show", writes && /^\/dev\//.test(v.target));
+
+    let out;
+    const n = v.rws.length * v.bss.length;
+    if (n === 0) {
+      out = "# select at least one I/O pattern and one block size";
+    } else {
+      const multi = n > 1;
+      out = v.rws.flatMap(rw => v.bss.map(bs => buildOne(v, rw, bs, multi))).join("\n\n");
+    }
+    $("cmdCount").textContent = n > 1 ? `${n} commands` : "Command";
+    $("cmd").textContent = out;
   }
 
-  fields.forEach(id => $(id).addEventListener("input", render));
-  checks.forEach(id => $(id).addEventListener("change", render));
-  $("rw").addEventListener("change", render);
-  $("bs").addEventListener("change", render);
-  $("ioengine").addEventListener("change", render);
-  $("outputFmt").addEventListener("change", render);
+  document.querySelectorAll("input, select").forEach(el => {
+    el.addEventListener("input", render);
+    el.addEventListener("change", render);
+  });
 
-  $("targetKind").querySelectorAll("button").forEach(b => {
-    b.addEventListener("click", () => {
-      targetKind = b.dataset.v;
-      $("targetKind").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
-      $("target").value = targetKind === "directory" ? "/tmp/fio-testdir" : "/tmp/fio-testfile";
+  document.querySelectorAll('input[name="targetKind"]').forEach(el => {
+    el.addEventListener("change", () => {
+      $("target").value = el.value === "directory" ? "/tmp/fio-testdir" : "/tmp/fio-testfile";
       render();
     });
   });
@@ -356,26 +254,6 @@
       $("copyBtn").textContent = "Copied!";
       setTimeout(() => { $("copyBtn").textContent = "Copy"; }, 1200);
     } catch { /* clipboard unavailable */ }
-  });
-
-  const presets = {
-    randread4k:  { name: "randread-4k",  rw: "randread",  bs: "4k", iodepth: "32", numjobs: "4", timeBased: true },
-    randwrite4k: { name: "randwrite-4k", rw: "randwrite", bs: "4k", iodepth: "32", numjobs: "4", timeBased: true },
-    seqread:     { name: "seqread-1m",   rw: "read",      bs: "1M", iodepth: "8",  numjobs: "1", timeBased: true },
-    seqwrite:    { name: "seqwrite-1m",  rw: "write",     bs: "1M", iodepth: "8",  numjobs: "1", timeBased: true },
-    mixed:       { name: "mixed-7030",   rw: "randrw",    bs: "4k", iodepth: "32", numjobs: "4", rwmixread: "70", timeBased: true },
-    latency:     { name: "latency-qd1",  rw: "randread",  bs: "4k", iodepth: "1",  numjobs: "1", timeBased: true },
-  };
-  $("presets").querySelectorAll("button").forEach(b => {
-    b.addEventListener("click", () => {
-      const p = presets[b.dataset.preset];
-      for (const [k, val] of Object.entries(p)) {
-        const el = $(k);
-        if (!el) continue;
-        if (el.type === "checkbox") el.checked = val; else el.value = val;
-      }
-      render();
-    });
   });
 
   render();
