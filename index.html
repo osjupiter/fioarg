@@ -29,6 +29,8 @@
   fieldset { margin-bottom: 1.25rem; }
   h1 span { color: var(--pico-primary); }
   .hint { color: var(--pico-muted-color); font-size: 0.8rem; }
+  .stack { max-width: 36rem; margin: 0 auto; }
+  .stack > * + * { margin-top: 0.75rem; }
   .ticks { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--pico-muted-color); margin-top: -0.5rem; padding: 0 2px; }
   .ticks span { cursor: pointer; }
   .ticks span:hover { color: var(--pico-primary); }
@@ -76,7 +78,7 @@
 
   <fieldset>
     <legend><strong>Scale &amp; engine</strong></legend>
-    <div class="grid">
+    <div class="stack">
       <div class="slider-row">
         <label for="iodepth">Queue depth <code>--iodepth</code> <input class="scrub" id="iodepthVal"></label>
         <input type="range" id="iodepth" min="0" max="9" step="1">
@@ -85,8 +87,6 @@
         <label for="numjobs">Parallel jobs <code>--numjobs</code> <input class="scrub" id="numjobsVal"></label>
         <input type="range" id="numjobs" min="0" max="31" step="1">
       </div>
-    </div>
-    <div class="grid">
       <div class="slider-row">
         <label for="size">Size <code>--size</code> <input class="scrub" id="sizeVal"></label>
         <input type="range" id="size" min="0" max="22" step="1">
@@ -103,8 +103,8 @@
           <option value="windowsaio">windowsaio — Windows</option>
         </select>
       </label>
+      <label><input type="checkbox" id="direct" role="switch" checked> Direct I/O <code>--direct=1</code> (bypass page cache)</label>
     </div>
-    <label><input type="checkbox" id="direct" role="switch" checked> Direct I/O <code>--direct=1</code> (bypass page cache)</label>
   </fieldset>
 
   <fieldset>
