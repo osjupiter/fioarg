@@ -9,9 +9,15 @@
 <style>
   .checks { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
   .checks label { display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 0; white-space: nowrap; }
-  .checks input[type="checkbox"] { margin: 0; }
-  .slider-row label { display: flex; justify-content: space-between; margin-bottom: 0.25rem; }
-  .slider-row output { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .checks input { margin: 0; }
+  .slider-row > label { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; }
+  input.scrub {
+    width: 6.5rem; margin: 0; padding: 0.1rem 0.5rem; height: auto;
+    text-align: right; font-weight: 600; font-variant-numeric: tabular-nums;
+    cursor: ew-resize; touch-action: none;
+  }
+  input.scrub:focus { cursor: text; }
+  body.scrubbing { cursor: ew-resize; user-select: none; }
   .cmds { position: sticky; bottom: 0; background: var(--pico-background-color); padding: 0.75rem 0 1rem; border-top: 1px solid var(--pico-muted-border-color); }
   .cmds pre { max-height: 30vh; overflow-y: auto; margin-bottom: 0.5rem; }
   .cmds .bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; }
@@ -21,39 +27,38 @@
   #devWarn.show { display: block; }
   fieldset { margin-bottom: 1.25rem; }
   h1 span { color: var(--pico-primary); }
+  .hint { color: var(--pico-muted-color); font-size: 0.8rem; }
 </style>
 </head>
 <body>
 <main class="container">
   <hgroup>
     <h1><span>fio</span>arg</h1>
-    <p>Tick the options like a survey — get ready-to-run <code>fio</code> commands. Multiple patterns × block sizes generate one command per combination.</p>
+    <p>Click through the options to build a ready-to-run <code>fio</code> command.
+       Numbers can be <strong>dragged left/right</strong> (Blender style) or edited directly.</p>
   </hgroup>
 
   <fieldset>
     <legend><strong>I/O pattern <code>--rw</code></strong></legend>
-    <div class="checks" id="rwChecks">
-      <label><input type="checkbox" name="rw" value="read"> read</label>
-      <label><input type="checkbox" name="rw" value="write"> write</label>
-      <label><input type="checkbox" name="rw" value="randread" checked> randread</label>
-      <label><input type="checkbox" name="rw" value="randwrite"> randwrite</label>
-      <label><input type="checkbox" name="rw" value="randrw"> randrw</label>
-      <label><input type="checkbox" name="rw" value="readwrite"> readwrite</label>
+    <div class="checks">
+      <label><input type="radio" name="rw" value="read"> read</label>
+      <label><input type="radio" name="rw" value="write"> write</label>
+      <label><input type="radio" name="rw" value="randread" checked> randread</label>
+      <label><input type="radio" name="rw" value="randwrite"> randwrite</label>
+      <label><input type="radio" name="rw" value="randrw"> randrw</label>
+      <label><input type="radio" name="rw" value="readwrite"> readwrite</label>
+    </div>
+    <div class="slider-row" id="rwmixRow" hidden style="margin-top:0.75rem">
+      <label for="rwmixread">Read ratio <code>--rwmixread</code> <input class="scrub" id="rwmixreadVal"></label>
+      <input type="range" id="rwmixread" min="0" max="20" step="1">
     </div>
   </fieldset>
 
   <fieldset>
     <legend><strong>Block size <code>--bs</code></strong></legend>
-    <div class="checks" id="bsChecks">
-      <label><input type="checkbox" name="bs" value="4k" checked> 4k</label>
-      <label><input type="checkbox" name="bs" value="8k"> 8k</label>
-      <label><input type="checkbox" name="bs" value="16k"> 16k</label>
-      <label><input type="checkbox" name="bs" value="32k"> 32k</label>
-      <label><input type="checkbox" name="bs" value="64k"> 64k</label>
-      <label><input type="checkbox" name="bs" value="128k"> 128k</label>
-      <label><input type="checkbox" name="bs" value="256k"> 256k</label>
-      <label><input type="checkbox" name="bs" value="512k"> 512k</label>
-      <label><input type="checkbox" name="bs" value="1M"> 1M</label>
+    <div class="slider-row">
+      <label for="bs"><span></span> <input class="scrub" id="bsVal"></label>
+      <input type="range" id="bs" min="0" max="8" step="1">
     </div>
   </fieldset>
 
@@ -61,18 +66,19 @@
     <legend><strong>Scale &amp; engine</strong></legend>
     <div class="grid">
       <div class="slider-row">
-        <label for="iodepth">Queue depth <code>--iodepth</code> <output id="iodepthOut">32</output></label>
-        <input type="range" id="iodepth" min="0" max="8" step="1" value="5">
+        <label for="iodepth">Queue depth <code>--iodepth</code> <input class="scrub" id="iodepthVal"></label>
+        <input type="range" id="iodepth" min="0" max="9" step="1">
       </div>
       <div class="slider-row">
-        <label for="numjobs">Parallel jobs <code>--numjobs</code> <output id="numjobsOut">1</output></label>
-        <input type="range" id="numjobs" min="1" max="16" step="1" value="1">
+        <label for="numjobs">Parallel jobs <code>--numjobs</code> <input class="scrub" id="numjobsVal"></label>
+        <input type="range" id="numjobs" min="0" max="31" step="1">
       </div>
     </div>
     <div class="grid">
       <div class="slider-row">
-        <label for="size">Size <code>--size</code> <output id="sizeOut">1G</output></label>
-        <input type="range" id="size" min="0" max="7" step="1" value="3">
+        <label for="size">Size <code>--size</code> <input class="scrub" id="sizeVal"></label>
+        <input type="range" id="size" min="0" max="22" step="1">
+        <div class="hint">100M–512M, then 1G steps up to 20G — or type any value (e.g. 1500M)</div>
       </div>
       <label for="ioengine">I/O engine <code>--ioengine</code>
         <select id="ioengine">
@@ -87,10 +93,6 @@
       </label>
     </div>
     <label><input type="checkbox" id="direct" role="switch" checked> Direct I/O <code>--direct=1</code> (bypass page cache)</label>
-    <div class="slider-row" id="rwmixRow" hidden>
-      <label for="rwmixread">Read ratio for mixed workloads <code>--rwmixread</code> <output id="rwmixreadOut">70%</output></label>
-      <input type="range" id="rwmixread" min="0" max="100" step="5" value="70">
-    </div>
   </fieldset>
 
   <fieldset>
@@ -98,12 +100,12 @@
     <label><input type="checkbox" id="timeBased" role="switch" checked> Time based <code>--time_based</code> — run until runtime even after size is exhausted</label>
     <div class="grid">
       <div class="slider-row">
-        <label for="runtime">Runtime <code>--runtime</code> <output id="runtimeOut">30s</output></label>
-        <input type="range" id="runtime" min="10" max="600" step="10" value="30">
+        <label for="runtime">Runtime <code>--runtime</code> <input class="scrub" id="runtimeVal"></label>
+        <input type="range" id="runtime" min="0" max="59" step="1">
       </div>
       <div class="slider-row">
-        <label for="rampTime">Ramp time <code>--ramp_time</code> <output id="rampTimeOut">off</output></label>
-        <input type="range" id="rampTime" min="0" max="60" step="5" value="0">
+        <label for="rampTime">Ramp time <code>--ramp_time</code> <input class="scrub" id="rampTimeVal"></label>
+        <input type="range" id="rampTime" min="0" max="12" step="1">
       </div>
     </div>
   </fieldset>
@@ -139,12 +141,16 @@
 
   <fieldset>
     <legend><strong>Job name <code>--name</code></strong></legend>
-    <input type="text" id="jobName" placeholder="auto-generated from the combination, e.g. randread-4k-qd32">
+    <p class="hint" style="margin-bottom:0.5rem">
+      Auto-generated as <em>pattern-size-qdN</em> (e.g. <code id="namePreview"></code>).
+      Anything you type here is appended as a suffix.
+    </p>
+    <input type="text" id="nameSuffix" placeholder="optional suffix, e.g. nvme0 → randread-1G-qd32-nvme0">
   </fieldset>
 
   <section class="cmds">
     <div class="bar">
-      <small id="cmdCount">Command</small>
+      <small>Command</small>
       <button id="copyBtn">Copy</button>
     </div>
     <pre><code id="cmd"></code></pre>
@@ -161,82 +167,180 @@
 <script>
 (function () {
   const $ = id => document.getElementById(id);
-  const QD = [1, 2, 4, 8, 16, 32, 64, 128, 256];
-  const SIZES = ["100M", "256M", "512M", "1G", "2G", "4G", "8G", "16G"];
+  const range = (from, to, step) =>
+    Array.from({ length: Math.floor((to - from) / step) + 1 }, (_, i) => from + i * step);
 
-  const checked = name =>
-    [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(el => el.value);
-  const isMixed = rw => rw === "randrw" || rw === "readwrite";
+  const SCALES = {
+    bs:        ["4k", "8k", "16k", "32k", "64k", "128k", "256k", "512k", "1M"],
+    iodepth:   [1, 2, 4, 8, 16, 32, 64, 128, 256, 512],
+    numjobs:   range(1, 32, 1),
+    size:      ["100M", "256M", "512M", ...range(1, 20, 1).map(g => g + "G")],
+    runtime:   range(10, 600, 10),
+    rampTime:  range(0, 60, 5),
+    rwmixread: range(0, 100, 5),
+  };
 
-  function values() {
-    return {
-      rws: checked("rw"),
-      bss: checked("bs"),
-      iodepth: QD[+$("iodepth").value],
-      numjobs: +$("numjobs").value,
-      size: SIZES[+$("size").value],
-      ioengine: $("ioengine").value,
-      direct: $("direct").checked,
-      rwmixread: +$("rwmixread").value,
-      timeBased: $("timeBased").checked,
-      runtime: +$("runtime").value,
-      rampTime: +$("rampTime").value,
-      targetKind: document.querySelector('input[name="targetKind"]:checked').value,
-      target: $("target").value.trim(),
-      outputFmt: $("outputFmt").value,
-      extra: $("extra").value.trim(),
-      groupRep: $("groupRep").checked,
-      jobName: $("jobName").value.trim(),
+  // scrub-field state: current value per field (free-text fields may hold values outside the scale)
+  const state = {
+    bs: "4k", iodepth: 32, numjobs: 1, size: "1G",
+    runtime: 30, rampTime: 0, rwmixread: 70,
+  };
+
+  const FIELDS = {
+    bs:        { fmt: v => v,               parse: parseSize, freeText: false },
+    iodepth:   { fmt: v => String(v),       parse: parseIntIn(1, 4096) },
+    numjobs:   { fmt: v => String(v),       parse: parseIntIn(1, 256) },
+    size:      { fmt: v => v,               parse: parseSize, freeText: true },
+    runtime:   { fmt: v => v + "s",         parse: parseIntIn(1, 86400) },
+    rampTime:  { fmt: v => v > 0 ? v + "s" : "off", parse: s => /off/i.test(s) ? 0 : parseIntIn(0, 3600)(s) },
+    rwmixread: { fmt: v => v + "%",         parse: parseIntIn(0, 100) },
+  };
+
+  function parseIntIn(min, max) {
+    return s => {
+      const n = parseInt(String(s).replace(/[^\d-]/g, ""), 10);
+      return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : null;
     };
   }
+  function parseSize(s) {
+    s = String(s).trim().replace(/[bB]$/, "");
+    return /^\d+[kKmMgGtT]?$/.test(s) ? s : null;
+  }
 
-  function buildOne(v, rw, bs, multi) {
-    let name = v.jobName || `${rw}-${bs}-qd${v.iodepth}`;
-    if (v.jobName && multi) name = `${v.jobName}-${rw}-${bs}`;
+  function nearestIdx(field, value) {
+    const scale = SCALES[field];
+    const exact = scale.findIndex(v => String(v) === String(value));
+    if (exact >= 0) return exact;
+    const num = x => toBytesish(x);
+    const target = num(value);
+    let best = 0, bestD = Infinity;
+    scale.forEach((v, i) => {
+      const d = Math.abs(num(v) - target);
+      if (d < bestD) { bestD = d; best = i; }
+    });
+    return best;
+  }
+  function toBytesish(v) {
+    if (typeof v === "number") return v;
+    const m = String(v).match(/^(\d+)([kKmMgGtT]?)/);
+    if (!m) return 0;
+    const mult = { "": 1, k: 1024, m: 1024 ** 2, g: 1024 ** 3, t: 1024 ** 4 }[m[2].toLowerCase()];
+    return +m[1] * mult;
+  }
 
-    const args = [`--name=${name}`, `--rw=${rw}`, `--bs=${bs}`, `--size=${v.size}`,
-                  `--numjobs=${v.numjobs}`, `--iodepth=${v.iodepth}`,
-                  `--ioengine=${v.ioengine}`, `--direct=${v.direct ? 1 : 0}`];
-    if (v.timeBased) args.push("--time_based", `--runtime=${v.runtime}`);
-    if (v.rampTime > 0) args.push(`--ramp_time=${v.rampTime}`);
-    if (v.target) args.push(`--${v.targetKind}=${v.target}`);
-    if (isMixed(rw)) args.push(`--rwmixread=${v.rwmixread}`);
-    args.push(`--output-format=${v.outputFmt}`);
-    if (v.groupRep) args.push("--group_reporting");
-    if (v.extra) args.push(v.extra);
+  function setField(field, value) {
+    state[field] = value;
+    $(field).value = nearestIdx(field, value);
+    $(field + "Val").value = FIELDS[field].fmt(value);
+  }
+
+  function initScrub(field) {
+    const slider = $(field);
+    const box = $(field + "Val");
+    const scale = SCALES[field];
+    const def = FIELDS[field];
+
+    slider.max = scale.length - 1;
+    slider.addEventListener("input", () => {
+      state[field] = scale[+slider.value];
+      box.value = def.fmt(state[field]);
+      render();
+    });
+
+    box.addEventListener("change", commitText);
+    box.addEventListener("keydown", e => {
+      if (e.key === "Enter") { commitText(); box.blur(); }
+      if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        e.preventDefault();
+        step(e.key === "ArrowUp" ? 1 : -1);
+      }
+    });
+    function commitText() {
+      const v = def.parse(box.value);
+      if (v === null) { box.value = def.fmt(state[field]); return; }
+      if (def.freeText) setField(field, v);
+      else setField(field, scale[nearestIdx(field, v)]);
+      render();
+    }
+    function step(dir) {
+      const idx = Math.min(scale.length - 1, Math.max(0, nearestIdx(field, state[field]) + dir));
+      setField(field, scale[idx]);
+      render();
+    }
+
+    // Blender-style horizontal drag on the value box
+    let startX = 0, startIdx = 0, dragging = false;
+    box.addEventListener("pointerdown", e => {
+      if (e.button !== 0 || document.activeElement === box) return;
+      e.preventDefault();
+      startX = e.clientX;
+      startIdx = nearestIdx(field, state[field]);
+      dragging = false;
+      box.setPointerCapture(e.pointerId);
+    });
+    box.addEventListener("pointermove", e => {
+      if (!box.hasPointerCapture(e.pointerId)) return;
+      const dx = e.clientX - startX;
+      if (!dragging && Math.abs(dx) > 4) { dragging = true; document.body.classList.add("scrubbing"); }
+      if (dragging) {
+        const idx = Math.min(scale.length - 1, Math.max(0, startIdx + Math.round(dx / 10)));
+        if (scale[idx] !== state[field]) { setField(field, scale[idx]); render(); }
+      }
+    });
+    box.addEventListener("pointerup", e => {
+      if (!box.hasPointerCapture(e.pointerId)) return;
+      box.releasePointerCapture(e.pointerId);
+      document.body.classList.remove("scrubbing");
+      if (!dragging) { box.focus(); box.select(); }  // plain click → edit
+      dragging = false;
+    });
+
+    setField(field, state[field]);
+  }
+
+  Object.keys(SCALES).forEach(initScrub);
+
+  const isMixed = rw => rw === "randrw" || rw === "readwrite";
+  const radio = name => document.querySelector(`input[name="${name}"]:checked`).value;
+
+  function autoName() {
+    return `${radio("rw")}-${state.size}-qd${state.iodepth}`;
+  }
+
+  function build() {
+    const rw = radio("rw");
+    const suffix = $("nameSuffix").value.trim();
+    const name = suffix ? `${autoName()}-${suffix}` : autoName();
+    const target = $("target").value.trim();
+    const extra = $("extra").value.trim();
+
+    const args = [`--name=${name}`, `--rw=${rw}`, `--bs=${state.bs}`, `--size=${state.size}`,
+                  `--numjobs=${state.numjobs}`, `--iodepth=${state.iodepth}`,
+                  `--ioengine=${$("ioengine").value}`, `--direct=${$("direct").checked ? 1 : 0}`];
+    if ($("timeBased").checked) args.push("--time_based", `--runtime=${state.runtime}`);
+    if (state.rampTime > 0) args.push(`--ramp_time=${state.rampTime}`);
+    if (target) args.push(`--${radio("targetKind")}=${target}`);
+    if (isMixed(rw)) args.push(`--rwmixread=${state.rwmixread}`);
+    args.push(`--output-format=${$("outputFmt").value}`);
+    if ($("groupRep").checked) args.push("--group_reporting");
+    if (extra) args.push(extra);
     return "fio " + args.join(" ");
   }
 
   function render() {
-    const v = values();
+    const rw = radio("rw");
+    $("rwmixRow").hidden = !isMixed(rw);
+    $("runtime").disabled = !$("timeBased").checked;
+    $("namePreview").textContent = autoName();
 
-    // sync slider value labels
-    $("iodepthOut").textContent = v.iodepth;
-    $("numjobsOut").textContent = v.numjobs;
-    $("sizeOut").textContent = v.size;
-    $("rwmixreadOut").textContent = v.rwmixread + "%";
-    $("runtimeOut").textContent = v.runtime + "s";
-    $("rampTimeOut").textContent = v.rampTime > 0 ? v.rampTime + "s" : "off";
-    $("runtime").disabled = !v.timeBased;
+    const writes = rw !== "read" && rw !== "randread";
+    $("devWarn").classList.toggle("show", writes && /^\/dev\//.test($("target").value.trim()));
 
-    $("rwmixRow").hidden = !v.rws.some(isMixed);
-
-    const writes = v.rws.some(rw => rw !== "read" && rw !== "randread");
-    $("devWarn").classList.toggle("show", writes && /^\/dev\//.test(v.target));
-
-    let out;
-    const n = v.rws.length * v.bss.length;
-    if (n === 0) {
-      out = "# select at least one I/O pattern and one block size";
-    } else {
-      const multi = n > 1;
-      out = v.rws.flatMap(rw => v.bss.map(bs => buildOne(v, rw, bs, multi))).join("\n\n");
-    }
-    $("cmdCount").textContent = n > 1 ? `${n} commands` : "Command";
-    $("cmd").textContent = out;
+    $("cmd").textContent = build();
   }
 
   document.querySelectorAll("input, select").forEach(el => {
+    if (el.classList.contains("scrub") || el.type === "range") return; // handled above
     el.addEventListener("input", render);
     el.addEventListener("change", render);
   });
